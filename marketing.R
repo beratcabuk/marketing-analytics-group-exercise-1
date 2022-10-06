@@ -1,17 +1,3 @@
-library(plm)
-library(car)
-library(ggplot2)
-
-marketing <- read.csv("Marketing Insight.csv")
-summary(marketing)
-
-it_sector <- marketing[marketing$sector == "6", ]
-summary(it_sector) #check data integrity
-
-it_sector_clea <- it_sector#[it_sector$mkt >= 0, ] #clean neg. mkt
-it_sector_clean <- it_sector_clea[it_sector_clea$sales > 0, ] #clean zero sales
-summary(it_sector_clean)
-
 it_sector_scaled <- it_sector_clean #remove
 it_sector_scaled$ad <- it_sector_scaled$ad / it_sector_scaled$sales #remove
 it_sector_scaled$rd <- it_sector_scaled$rd / it_sector_scaled$sales #remove
@@ -102,6 +88,20 @@ fe_lvl2 <- plm(earnings ~ ad + rd + threat * ad,
 summary(fe_lvl2)
 
 # AFTER CONSULT. SESSION
+library(plm)
+library(car)
+library(ggplot2)
+
+marketing <- read.csv("Marketing Insight.csv")
+summary(marketing)
+
+it_sector <- marketing[marketing$sector == "6", ]
+summary(it_sector) # check data integrity
+
+it_sector_clea <- it_sector[it_sector$mkt >= 0, ] #clean neg. mkt
+it_sector_clean <- it_sector_clea[it_sector_clea$sales > 0, ] # clean zero sales
+summary(it_sector_clean)
+
 it_sector_final <- it_sector_clean
 it_sector_final$ad_sales <- it_sector_final$ad / it_sector_final$sales
 it_sector_final$rd_sales <- it_sector_final$rd / it_sector_final$sales
@@ -160,15 +160,25 @@ rnd_alt <- plm(
     data = it_sector_final, index = c("id", "year"), model = "random",
     effect = "twoways"
 )
-fixed_dummy <- lm(log(mv) ~ log1p(rd) + log1p(ad) + log1p(assets) + threat
-    + log1p(debt) + threat * log1p(rd) + factor(year) - 1,
+fixed_dummy <- lm(log(mv) ~ log1p(rd) + log1p(ad) + log1p(assets) + log(threat)
+    + log1p(debt) + log1p(mkt) + log1p(ad) * log1p(rd)
+    + factor(year) - 1,
     data = it_sector_final
 )
+summary(fixed_dummy)
+
+fixed_dummy3 <- lm(log(mv) ~ log1p(rd) + log1p(ad) + log1p(assets) + log(threat)
+    + log1p(debt) + log1p(mkt) + rd * ad
+    + factor(year) - 1,
+data = it_sector_final
+)
+summary(fixed_dummy3)
+
 fixed_dummy2 <- lm(log1p(fv) ~ log1p(rd) + log1p(ad) + log1p(assets) + threat
     + log1p(debt) + threat * log1p(rd) + factor(year) - 1,
 data = it_sector_final
 )
-summary(fixed_dummy)
+
 summary(fe_alt)
 summary(rnd_alt)
 phtest(fe_alt, rnd_alt)
