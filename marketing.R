@@ -169,7 +169,7 @@ rnd_alt <- plm(
     data = it_sector_final, index = c("id", "year"), model = "random",
     effect = "twoways"
 )
-fixed_dummy <- lm(log(mv) ~ log1p(rd) + log1p(ad) + log1p(assets) + log(threat)
+fixed_dummy <- lm(log(mv) ~ log1p(ad) + log1p(rd) + log1p(assets) + log(threat)
     + log1p(debt) + log1p(ad) * log1p(rd)
     + factor(year) - 1,
     data = it_sector_final
