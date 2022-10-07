@@ -91,6 +91,8 @@ summary(fe_lvl2)
 library(plm)
 library(car)
 library(ggplot2)
+library(margins)
+library(corrplot)
 
 marketing <- read.csv("Marketing Insight.csv")
 summary(marketing)
@@ -106,8 +108,15 @@ it_sector_final <- it_sector_clean
 it_sector_final$ad_sales <- it_sector_final$ad / it_sector_final$sales
 it_sector_final$rd_sales <- it_sector_final$rd / it_sector_final$sales
 it_sector_final$roa <- it_sector_final$earnings / it_sector_final$assets
+
 summary(it_sector_final)
-cor(it_sector_final)
+
+corr_matrix_data <- it_sector_final[c("mv", "ad", "rd", "assets",
+                                    "threat", "debt")]
+summary(corr_matrix_data)
+correlations <- cor(log1p(corr_matrix_data))
+correlations <- cor(corr_matrix_data)
+corrplot(correlations, "number")
 
 fe_sug1 <- plm(roa ~ ad_sales + rd_sales + threat * ad_sales,
     index = c("id", "year"), model = "within",
@@ -161,14 +170,14 @@ rnd_alt <- plm(
     effect = "twoways"
 )
 fixed_dummy <- lm(log(mv) ~ log1p(rd) + log1p(ad) + log1p(assets) + log(threat)
-    + log1p(debt) + log1p(mkt) + log1p(ad) * log1p(rd)
+    + log1p(debt) + log1p(ad) * log1p(rd)
     + factor(year) - 1,
     data = it_sector_final
 )
 summary(fixed_dummy)
 
-fixed_dummy3 <- lm(log(mv) ~ log1p(rd) + log1p(ad) + log1p(assets) + log(threat)
-    + log1p(debt) + log1p(mkt) + rd * ad
+fixed_dummy3 <- lm(log(mv) ~ log1p(rd) * log1p(debt) + log(threat)
+    + log1p(debt)
     + factor(year) - 1,
 data = it_sector_final
 )
@@ -179,6 +188,7 @@ fixed_dummy2 <- lm(log1p(fv) ~ log1p(rd) + log1p(ad) + log1p(assets) + threat
 data = it_sector_final
 )
 
+cor(log1p(it_sector_final))
 summary(fe_alt)
 summary(rnd_alt)
 phtest(fe_alt, rnd_alt)
